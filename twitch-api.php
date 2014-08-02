@@ -18,34 +18,25 @@
 		const METHOD_POST = 'POST';
 		const METHOD_PUT = 'PUT';
 		const METHOD_DELETE = 'DELETE';
-
+		
 		const PERIOD_WEEK = 'week';
 		const PERIOD_MONTH = 'month';
 		const PERIOD_ALL = 'all';
+		const DIRECTION_ASC = 'asc';
+		const DIRECTION_DESC = 'desc';
+		const BOOL_TRUE = 'true';
+		const BOOL_FALSE = 'false';
+		const TYPE_SUGGEST = 'suggest';
+		const SORTBY_CREATED = 'created_at';
+		const SORTBY_BROADCAST = 'last_broadcast';
 		
-		const DEFAULT_USER = 'everalert';
-		const DEFAULT_USER_ALT = 'hoshizoramiyuki';
-		const DEFAULT_CHANNEL = 'everalert';
-		const DEFAULT_CHANNEL_ALT = 'hoshizoramiyuki';
-		const DEFAULT_TEAM = 'srl';
-		const DEFAULT_LIMIT = 10;
-		const DEFAULT_LIMIT_GAMES = 10;
-		const DEFAULT_LIMIT_VIDEOS = 10;
-		const DEFAULT_LIMIT_STREAMS = 25;
-		const DEFAULT_LIMIT_TEAMS = 25;
-		const DEFAULT_LIMIT_FOLLOWS = 25;
-		const DEFAULT_LIMIT_SEARCH = 25;
-		const DEFAULT_OFFSET = 0;
-		const DEFAULT_BROADCASTS = false;
-		const DEFAULT_DIRECTION = 'desc';
-		const DEFAULT_HLS = false;
-		const DEFAULT_GAME = 'The Legend of Zelda: Ocarina of Time';
-		const DEFAULT_SEARCH = 'The Legend of Zelda: Ocarina of Time';
-		const DEFAULT_VIDEO = 'c4312576';
-		const DEFAULT_PERIOD = self::PERIOD_WEEK;
-		const DEFAULT_SORTBY = 'created_at';
-		const DEFAULT_TYPE = 'suggest';
-		const DEFAULT_LIVE = false;
+		const DEF_MAIN = 'everalert';
+		const DEF_ALT = 'hoshizoramiyuki';
+		const DEF_TEAM = 'srl';
+		const DEF_GAME = 'The Legend of Zelda: Ocarina of Time';
+		const DEF_SEARCH = 'The Legend of Zelda: Ocarina of Time';
+		const DEF_VIDEO = 'c4312576';
+		const DEF_TYPE = self::TYPE_SUGGEST;
 		
 		const PATTERN_USER = '/^[a-z0-9_]+$/i';
 		const PATTERN_CHANNEL = '/^[a-z0-9_]+$/i';
@@ -87,64 +78,20 @@
 		
 		// Input Validation
 		
-		private function validateUser($u=self::DEFAULT_USER) {
-			return preg_match(self::PATTERN_USER,$u)?$u:self::DEFAULT_USER;
+		private function validateAccount($c=NULL) {
+			return preg_match(self::PATTERN_CHANNEL,$c)?$c:NULL;
 		}
 		
-		private function validateChannel($c=self::DEFAULT_CHANNEL) {
-			return preg_match(self::PATTERN_CHANNEL,$c)?$c:self::DEFAULT_CHANNEL;
+		private function validateTeam($t=self::DEF_TEAM) {
+			return preg_match(self::PATTERN_TEAM,$t)?$t:self::DEF_TEAM;
 		}
 		
-		private function validateTeam($t=self::DEFAULT_TEAM) {
-			return preg_match(self::PATTERN_TEAM,$t)?$t:self::DEFAULT_TEAM;
+		private function validateVideo($c=self::DEF_VIDEO) {
+			return preg_match(self::PATTERN_VIDEO,$c)?$c:self::DEF_VIDEO;
 		}
 		
-		private function validateVideo($c=self::DEFAULT_VIDEO) {
-			return preg_match(self::PATTERN_VIDEO,$c)?$c:self::DEFAULT_VIDEO;
-		}
-		
-		private function validateLimit($l=self::DEFAULT_LIMIT) {
-			return is_int($l)&&$l>0&&$l<=100?$l:self::DEFAULT_LIMIT;
-		}
-		
-		private function validateOffset($o=self::DEFAULT_OFFSET) {
-			return is_int($o)&&$o>=0?$o:self::DEFAULT_OFFSET;
-		}
-		
-		private function validateBroadcasts($b=self::DEFAULT_BROADCASTS) {
-			return (is_bool($b)&&$b==true)||$b=='true'||$b==1?'true':'false';
-		}
-		
-		private function validateLive($l=self::DEFAULT_LIVE) {
-			return (is_bool($l)&&$l==true)||$l=='true'||$l==1?'true':'false';
-		}
-		
-		private function validateType($t=self::DEFAULT_TYPE) {
-			return self::DEFAULT_TYPE;
-		}
-		
-		private function validateDirection($d=self::DEFAULT_DIRECTION) {
-			return $d!='asc'?'desc':'asc';
-		}
-		
-		private function validateSortby($s=self::DEFAULT_SORTBY) {
-			return $s!='last_broadcast'?'created_at':'last_broadcast';
-		}
-		
-		private function validatePeriod($p=self::DEFAULT_PERIOD) {
-			return $p==self::PERIOD_MONTH||$p==self::PERIOD_ALL?$p:self::DEFAULT_PERIOD;
-		}
-		
-		private function validateGame($g=self::DEFAULT_GAME) {
-			return urlencode($g);
-		}
-		
-		private function validateSearch($s=self::DEFAULT_SEARCH) {
+		private function validateString($s=self::DEF_SEARCH) {
 			return urlencode($s);
-		}
-		
-		private function validateHls($h=self::DEFAULT_HLS) {
-			return (is_bool($h)&&$h==true)||$h=='true'||$h==1?'true':'false';
 		}
 		
 		// Settings
@@ -162,17 +109,15 @@
 		
 		public function user() {} // get auth
 		
-		public function userFollowing($user=self::DEFAULT_USER,$limit=self::DEFAULT_LIMIT_FOLLOWS,$offset=self::DEFAULT_OFFSET,$direction=self::DEFAULT_DIRECTION,$sortby=self::DEFAULT_SORTBY) {
-			global $direction,$sortby;
-			return $this->api(self::API_URI.'/users/'.$this->validateUser($user).'/follows/channels'.
-				'?limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&direction='.$this->validateDirection($direction).
-				'&sortby='.$this->validateSortby($sortby),self::METHOD_GET);
+		public function userFollowing($user=self::DEF_MAIN,$limit=NULL,$offset=NULL,$direction=NULL,$sortby=NULL) {
+			global $user,$limit,$offset,$direction,$sortby;
+			return $this->api(self::API_URI.'/users/'.$this->validateAccount($user).'/follows/channels'.
+				'?limit='.$limit.'&offset='.$offset.'&direction='.$direction.'&sortby='.$sortby,self::METHOD_GET);
 		}
 		
-		public function userFollowsUser($user=self::DEFAULT_USER,$target=self::DEFAULT_USER_ALT) {
-			return $this->api(self::API_URI.'/users/'.$this->validateUser($user).'/follows/channels/'.$this->validateUser($target),self::METHOD_GET);
+		public function userFollowsUser($user=self::DEF_MAIN,$target=self::DEF_MAIN_ALT) {
+			global $user,$target;
+			return $this->api(self::API_URI.'/users/'.$this->validateAccount($user).'/follows/channels/'.$this->validateAccount($target),self::METHOD_GET);
 		}
 		
 		public function userFollow() {} // put auth
@@ -185,8 +130,8 @@
 		
 		public function userUnblock() {} // delete auth
 		
-		public function getUser($user=self::DEFAULT_CHANNEL) {
-			return $this->api(self::API_URI.'/users/'.$this->validateUser($user),self::METHOD_GET);
+		public function getUser($user=self::DEF_MAIN) {
+			return $this->api(self::API_URI.'/users/'.$this->validateAccount($user),self::METHOD_GET);
 		}
 		
 		public function getUserSubscribedChannel() {} // get auth
@@ -202,24 +147,20 @@
 		
 		public function channelCommercial() {} // post auth
 		
-		public function getChannel($channel=self::DEFAULT_CHANNEL) {
-			return $this->api(self::API_URI.'/channels/'.$this->validateChannel($channel),self::METHOD_GET);
+		public function getChannel($channel=self::DEF_MAIN) {
+			return $this->api(self::API_URI.'/channels/'.$this->validateAccount($channel),self::METHOD_GET);
 		}
 		
-		public function getChannelVideos($channel=self::DEFAULT_CHANNEL,$limit=self::DEFAULT_LIMIT,$offset=self::DEFAULT_OFFSET,$broadcasts=self::DEFAULT_BROADCASTS) {
-			global $broadcasts;
-			return $this->api(self::API_URI.'/channels/'.$this->validateChannel($channel).'/videos'.
-				'?limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&broadcasts='.$this->validateBroadcasts($broadcasts),self::METHOD_GET);
+		public function getChannelVideos($channel=self::DEF_MAIN,$limit=NULL,$offset=NULL,$broadcasts=NULL) {
+			global $channel,$limit,$offset,$broadcasts;
+			return $this->api(self::API_URI.'/channels/'.$this->validateAccount($channel).'/videos'.
+				'?limit='.$limit.'&offset='.$offset.'&broadcasts='.$broadcasts,self::METHOD_GET);
 		}
 		
-		public function getChannelFollows($channel=self::DEFAULT_CHANNEL,$limit=self::DEFAULT_LIMIT_FOLLOWS,$offset=self::DEFAULT_OFFSET,$direction=self::DEFAULT_DIRECTION) {
-			global $direction;
-			return $this->api(self::API_URI.'/channels/'.$this->validateChannel($channel).'/follows'.
-				'?limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&direction='.$this->validateDirection($direction),self::METHOD_GET);
+		public function getChannelFollows($channel=self::DEF_MAIN,$limit=NULL,$offset=NULL,$direction=NULL) {
+			global $channel,$limit,$offset,$direction;
+			return $this->api(self::API_URI.'/channels/'.$this->validateAccount($channel).'/follows'.
+				'?limit='.$limit.'&offset='.$offset.'&direction='.$direction,self::METHOD_GET);
 		}
 		
 		public function getChannelEditors() {} // get auth
@@ -231,8 +172,8 @@
 		
 		// CHAT
 		
-		public function getChat($channel=self::DEFAULT_CHANNEL) {
-			return $this->api(self::API_URI.'/chat/'.$this->validateChannel($channel),self::METHOD_GET);
+		public function getChat($channel=self::DEF_MAIN) {
+			return $this->api(self::API_URI.'/chat/'.$this->validateAccount($channel),self::METHOD_GET);
 		}
 		
 		public function getChatEmoticons() {
@@ -242,12 +183,10 @@
 		
 		// GAMES
 		
-		public function games($limit=self::DEFAULT_LIMIT_GAMES,$offset=self::DEFAULT_OFFSET,$hls=self::DEFAULT_HLS) {
-			global $hls;
+		public function games($limit=NULL,$offset=NULL,$hls=NULL) {
+			global $limit,$offset,$hls;
 			return $this->api(self::API_URI.'/games/top'.
-				'?limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&hls='.$this->validateHls($hls),self::METHOD_GET);
+				'?limit='.$limit.'&offset='.$offset.'&hls='.$hls,self::METHOD_GET);
 		}
 		
 		
@@ -267,88 +206,82 @@
 		
 		// SEARCH
 		
-		public function searchChannels($query=self::DEFAULT_SEARCH,$limit=self::DEFAULT_LIMIT_SEARCH,$offset=self::DEFAULT_OFFSET) {
+		public function searchChannels($query=self::DEF_SEARCH,$limit=NULL,$offset=NULL) {
+			global $query,$limit,$offset;
 			return $this->api(self::API_URI.'/search/channels'.
-				'?query='.$this->validateSearch($query).
-				'&limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset),self::METHOD_GET);
+				'?query='.$this->validateString($query).'&limit='.$limit.'&offset='.$offset,self::METHOD_GET);
 		}
 		
-		public function searchStreams($query=self::DEFAULT_SEARCH,$limit=self::DEFAULT_LIMIT_SEARCH,$offset=self::DEFAULT_OFFSET,$hls=self::DEFAULT_HLS) {
-			return $this->api(self::API_URI.'/search/streams'.
-				'?query='.$this->validateSearch($query).
-				'&limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&hls='.$this->validateHls($hls),self::METHOD_GET);
+		public function searchStreams($query=self::DEF_SEARCH,$limit=NULL,$offset=NULL,$hls=NULL) {
+			global $query,$limit,$offset,$hls;
+			return $this->api(self::API_URI.'/search/streams?query='.$this->validateString($query).
+				'&limit='.$limit.'&offset='.$offset.'&hls='.$hls,self::METHOD_GET);
 		}
 		
-		public function searchGames($query=self::DEFAULT_SEARCH,$type=self::DEFAULT_TYPE,$limit=self::DEFAULT_LIMIT_SEARCH,$offset=self::DEFAULT_OFFSET,$live=self::DEFAULT_LIVE) {
-			global $live;
+		public function searchGames($query=self::DEF_SEARCH,$type=self::DEF_TYPE,$limit=NULL,$offset=NULL,$live=NULL) {
+			global $query,$type,$limit,$offset,$live;
 			return $this->api(self::API_URI.'/search/games'.
-				'?query='.$this->validateSearch($query).
-				'&type='.$this->validateType($type).
-				'&limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&live='.$this->validateLive($live),self::METHOD_GET);
-		} // get
+				'?query='.$this->validateString($query).'&type='.$type.
+				'&limit='.$limit.'&offset='.$offset.'&live='.$live,self::METHOD_GET);
+		}
 		
 		
 		// STREAMS
 		
-		public function streams() { //INCOMPLETE
-			return $this->api(self::API_URI.'/streams/',self::METHOD_GET);
+		public function streams($game=NULL,$channel=NULL,$limit=NULL,$offset=NULL,$embeddable=NULL,$hls=NULL,$client_id=NULL) {
+			global $game,$channel,$limit,$offset,$embeddable,$hls,$client_id;
+			return $this->api(self::API_URI.'/streams?'.
+				($game!=NULL?'game='.$this->validateString($game).'&':NULL).
+				($channel!=NULL?'channel='.$this->validateAccount($channel).'&':NULL).
+				($client_id!=NULL?'client_id='.$client_id.'&':NULL).
+				'limit='.$limit.'&offset='.$offset.'&embeddable='.$embeddable.'&hls='.$hls,self::METHOD_GET);
 		}
 		
-		public function streamsFeatured($limit=self::DEFAULT_LIMIT_STREAMS,$offset=self::DEFAULT_OFFSET,$hls=self::DEFAULT_HLS) {
-			global $hls;
+		public function streamsFeatured($limit=NULL,$offset=NULL,$hls=NULL) {
+			global $limit,$offset,$hls;
 			return $this->api(self::API_URI.'/streams/featured'.
-				'?limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&hls='.$this->validateHls($hls),self::METHOD_GET);
+				'?limit='.$limit.'&offset='.$offset.'&hls='.$hls,self::METHOD_GET);
 		}
 		
-		public function streamsSummary($limit=self::DEFAULT_LIMIT_STREAMS,$offset=self::DEFAULT_OFFSET,$hls=self::DEFAULT_HLS) {
-			global $hls;
+		public function streamsSummary($limit=NULL,$offset=NULL,$hls=NULL) {
+			global $limit,$offset,$hls;
 			return $this->api(self::API_URI.'/streams/summary'.
-				'?limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&hls='.$this->validateHls($hls),self::METHOD_GET);
+				'?limit='.$limit.'&offset='.$offset.'&hls='.$hls,self::METHOD_GET);
 		}
 		
 		public function streamsFollowed() {} // get auth
 		
-		public function getStream($channel=self::DEFAULT_CHANNEL) {
-			return $this->api(self::API_URI.'/streams/'.$this->validateChannel($channel),self::METHOD_GET);
+		public function getStream($channel=self::DEF_MAIN) {
+			return $this->api(self::API_URI.'/streams/'.$this->validateAccount($channel),self::METHOD_GET);
 		}
 		
 		
 		// TEAMS
 		
-		public function teams($limit=self::DEFAULT_LIMIT_TEAMS,$offset=self::DEFAULT_OFFSET) {
+		public function teams($limit=NULL,$offset=NULL) {
+			global $limit,$offset;
 			return $this->api(self::API_URI.'/teams'.
-				'?limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset),self::METHOD_GET);
+				'?limit='.$limit.'&offset='.$offset,self::METHOD_GET);
 		}
 		
-		public function getTeam($team=self::DEFAULT_TEAM) {
+		public function getTeam($team=self::DEF_TEAM) {
 			return $this->api(self::API_URI.'/teams/'.$this->validateTeam($team),self::METHOD_GET);
 		}
 		
 		
 		// VIDEOS
 		
-		public function videos($limit=self::DEFAULT_LIMIT_VIDEOS,$offset=self::DEFAULT_OFFSET,$game='',$period=self::DEFAULT_PERIOD) {
-			global $game,$period;
-			return $this->api(self::API_URI.'/videos/top'.
-				'?limit='.$this->validateLimit($limit).
-				'&offset='.$this->validateOffset($offset).
-				'&game='.$this->validateGame($game).
-				'&period='.$this->validatePeriod($period),self::METHOD_GET);
+		public function videos($limit=NULL,$offset=NULL,$game=NULL,$period=NULL) {
+			global $limit,$offset,$game,$period;
+			return $this->api(self::API_URI.'/videos/top?'.
+				($game!=NULL?'game='.$this->validateString($game).'&':NULL).
+				($period!=NULL?'period='.$period.'&':NULL).
+				'limit='.$limit.'&offset='.$offset,self::METHOD_GET);
 		}
 		
 		public function videosFollowed() {} // get auth v3-only
 		
-		public function getVideo($video=self::DEFAULT_VIDEO) {
+		public function getVideo($video=self::DEF_VIDEO) {
 			return $this->api(self::API_URI.'/videos/'.$this->validateVideo($video),self::METHOD_GET);
 		}
 		
